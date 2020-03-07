@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}电影{% endblock %}
+
+{% block stylesheets %}
+    <link href="http://libs.baidu.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-bottom: 140px; }
+        .row { padding-bottom: 10px; }
+        .bs-docs-footer {
+            padding-top: 50px;
+            padding-bottom: 50px;
+            margin-top: 100px;
+            color: #99979c;
+            text-align: center;
+            background-color: #2a2730;
+        }
+        .bs-docs-footer-links {
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+        .bs-docs-footer {
+            text-align: left;
+        }
+        .bs-docs-footer-links li {
+            display: inline-block;
+        }
+        .bs-docs-footer a {
+            color: #fff;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    <div class="container navbar navbar-default">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a>local</a></li>
+        </ul>
+        <div class="page-header">
+            <h1>电影 <button type="button" class="btn btn-link" id="refresh">更新</button></h1>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">
+                <input type="text" class="form-control" id="searchMovies" placeholder="搜索电影">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8"><h4>名称</h4></div>
+            <div class="col-xs-6 col-md-2"><h4>下载时间</h4></div>
+            <div class="col-xs-6 col-md-2"><h4>路径</h4></div>
+        </div>
+        <div id="moviesContainer">
+            {% for movie in movies %}
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6 col-md-8 movie-item" data-name="{{ movie.name }}" data-dir="{{ movie.dir }}"><a>{{ movie.name }}</a></div>
+                    <div class="col-xs-6 col-md-2">{{ movie.date }}</div>
+                    <div class="col-xs-6 col-md-2">{{ movie.dir }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="bs-docs-footer navbar navbar-default navbar-fixed-bottom">
+        <div class="container">
+            <ul class="bs-docs-footer-links">
+                <li><a>Movies 仓库</a></li>
+            </ul>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="http://libs.baidu.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/layer/2.2/layer.js"></script>
+
+    <script>
+        $(function(){
+            $("#searchMovies").keypress(function (e) {
+                if (e.which == 13) {
+                    searchMovies(this)
+                }
+            });
+
+            $("#refresh").click(function() {
+                var _this = $(this);
+                var layerLoad = layer.load(0, {shade: false});
+                $.ajax({
+                    url: "{{ path('local.movies.scan') }}",
+                    type: "POST",
+                    dataType: "json",
+                    success: function(json, testStatus, xhr) {
+                        layer.close(layerLoad)
+                        layer.msg('已完成更新',function(){});
+                    },
+                    error: function () {
+                        layer.close(layerLoad)
+                        layer.msg('服务器错误', {icon: 5});
+                    }
+                });
+            });
+			$(document).on('click','.movie-item',function(){
+				var _this = $(this);
+                var layerLoad = layer.load(0, {shade: false});
+                $.ajax({
+                    url: "{{ path('local.movies.play') }}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {"movieName": $(_this).data('name'), "movieDir": $(_this).data('dir')},
+                    success: function(json, testStatus, xhr) {
+                        layer.close(layerLoad)
+                    },
+                    error: function () {
+                        layer.close(layerLoad)
+                        layer.msg('服务器错误', {icon: 5});
+                    }
+                });
+			});
+        })
+
+        function searchMovies(object) {
+            var layerLoad = layer.load(0, {shade: false});
+            $.ajax({
+                url: "{{ path('local.movies.search') }}",
+                type: "POST",
+                dataType: "json",
+                data: {"movieName": $(object).val()},
+                success: function(json, testStatus, xhr) {
+                    layer.close(layerLoad);
+                    if (xhr.status != 200) {
+                        layer.msg('服务器错误', {icon: 5});
+                    }
+                    var _moviesHtml = '';
+                    $.each(json, function(index, item){
+                        _moviesHtml += '<div class="row">\n' +
+                            '<div class="col-xs-12 col-sm-6 col-md-8 movie-item" data-name="'+item.name+'" data-dir="'+item.dir+'"><a>'+item.name+'</a></div>\n' +
+                            '<div class="col-xs-6 col-md-2">'+item.date+'</div>\n' +
+                            '<div class="col-xs-6 col-md-2">'+item.dir+'</div>\n' +
+                            '</div>';
+                    });
+                    if (_moviesHtml == '') {
+                        _moviesHtml += '<div class="row">\n' +
+                            '<div class="col-xs-12 col-sm-6 col-md-12"><em>没有匹配记录<small></div>\n' +
+                            '</div>';
+                    }
+                    $("#moviesContainer").empty().append(_moviesHtml);
+                },
+                error: function () {
+                    layer.close(layerLoad);
+                    layer.msg('服务器错误', {icon: 5});
+                }
+            });
+        }
+    </script>
+{% endblock %}

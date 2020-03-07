@@ -1,0 +1,15 @@
+services:
+    Jayson\Movie\LocalMovie\Controller\:
+        resource: '../../Controller/*'
+        autowire: true
+        public: true
+        autoconfigure: true
+        tags: ['controller.service_arguments']
+
+    Jayson\Movie\LocalMovie\Scan\Sweep:
+        public: true
+        autowire: true
+
+    Jayson\Movie\LocalMovie\Scan\Read:
+        public: true
+        autowire: true

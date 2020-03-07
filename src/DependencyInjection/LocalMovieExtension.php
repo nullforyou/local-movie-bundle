@@ -1,0 +1,28 @@
+<?php
+
+
+namespace Jayson\Movie\LocalMovie\DependencyInjection;
+
+
+use Jayson\Movie\LocalMovie\Scan\Sweep;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+
+class LocalMovieExtension extends Extension
+{
+
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $configuration = $this->getConfiguration($configs, $container);
+
+        $config = $this->processConfiguration($configuration, $configs);
+
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('services.yaml');
+
+        $definition = $container->getDefinition(Sweep::class);
+        $definition->setArgument('$storageDir', $config['storage_dir']);
+    }
+}
