@@ -1,5 +1,5 @@
 {
-    "name": "jayson/local-movie-bundle",
+    "name": "nullforyou/local-movie-bundle",
     "description": "There are too many movies downloaded on the local disk. It's hard to find them. I wrote a program to manage them.",
     "type": "symfony-bundle",
     "license": "MIT",
